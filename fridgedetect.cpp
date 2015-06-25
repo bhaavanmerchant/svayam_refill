@@ -3,6 +3,7 @@
 #include "opencv2/videoio.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
+#include "opencv2/opencv.hpp"
 #include "opencv2/core/utility.hpp"
 
 #include "opencv2/videoio/videoio_c.h"
@@ -255,10 +256,23 @@ void detectAndDraw( Mat& img,
     cv::Mat bw;
     cv::cvtColor(img, bw, CV_BGR2GRAY);
     cv::threshold(bw, bw, 40, 255, CV_THRESH_BINARY);
+    int erosion_size = 1;
+    Mat element = getStructuringElement(cv::MORPH_CROSS,
+    cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1),
+    cv::Point(erosion_size, erosion_size) );
+    // Apply erosion or dilation on the image
+    cv::erode(bw,bw,element);
+    //cv::dilate(bw, bw, Mat(), Point(-1, -1), 2, 1, 1);
     cv::Mat dist;
     cv::distanceTransform(bw, dist, CV_DIST_L2, 3);
     //cv::normalize(dist, dist, 0, 1., cv::NORM_MINMAX);
     cv::threshold(dist, dist, .5, 1., CV_THRESH_BINARY);
+    //SimpleBlobDetector detector;
+    // Detect blobs.
+    //std::vector<KeyPoint> keypoints;
+    //detector.detect( dist, keypoints);
+    //cv::Mat im_with_keypoints;
+    //drawKeypoints( dist, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
     cv::Mat dist_8u;
     dist.convertTo(dist_8u, CV_8U);
     // Find total markers
@@ -266,6 +280,6 @@ void detectAndDraw( Mat& img,
     cv::findContours(dist_8u, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     // Total objects
     int ncomp = contours.size();
-    printf("Coke bottles %d\n", ncomp);
-    cv::imshow( "result", dist );
+    printf("Coke bottles:%d\n", ncomp);
+    cv::imshow( "result", dist);
 }
